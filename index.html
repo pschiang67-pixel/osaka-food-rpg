@@ -4,15 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>大阪美食大冒險</title>
-    <!-- ⬇️ 這一行非常重要！沒有它，畫面就會變成一團亂 -->
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    
+    <!-- ⬇️ 關鍵修復：Tailwind CSS 核心 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
-       /* 防止手機下拉重整 */
-       body { overscroll-behavior-y: none; }
+       /* 基礎重置 */
+       body { margin: 0; padding: 0; background-color: #111; overscroll-behavior-y: none; }
+       #root { width: 100%; height: 100%; }
     </style>
   </head>
   <body>
     <div id="root"></div>
+    <!-- ⬇️ 關鍵修復：確保路徑前面有斜線 / -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Navigation, Image as ImageIcon } from 'lucide-react';
+import { X, Navigation, Image as ImageIcon, Play, MapPin } from 'lucide-react';
 
 // --- 連結轉換函式 ---
 const getDriveImgUrl = (input) => {
@@ -44,8 +44,74 @@ const Landmark = ({ icon, x, y, size = "text-4xl", rotate = "0", label }) => (
   </div>
 );
 
-// --- 主程式組件 (已更名為 App) ---
+// --- 封面畫面 (Start Screen) - 手機版優化 ---
+const StartScreen = ({ onStart }) => {
+    // 您的首圖連結 ID
+    const coverImgId = "1XPYjSHQE7hT7T1y0p8ProtFgaxRqtqm5";
+    const coverUrl = getDriveImgUrl(coverImgId);
+
+    return (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black overflow-hidden">
+            {/* 背景圖片容器 - 雙層設計 */}
+            <div className="absolute inset-0">
+                {/* 1. 底層：模糊背景 (填滿螢幕，營造氛圍，避免黑邊) */}
+                <div className="absolute inset-0 overflow-hidden">
+                    <img 
+                        src={coverUrl} 
+                        alt="Background Blur" 
+                        className="w-full h-full object-cover opacity-50 blur-lg scale-110" 
+                    />
+                </div>
+                
+                {/* 2. 中層：完整圖片 (保持比例，完整顯示照片內容) */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <img 
+                        src={coverUrl} 
+                        alt="Osaka Cover" 
+                        className="w-full h-full object-contain shadow-2xl"
+                        style={{ maxHeight: '85%' }} // 預留一點空間給文字
+                    />
+                </div>
+                
+                {/* 3. 頂層：漸層遮罩 (確保文字清晰) */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/40"></div>
+            </div>
+
+            {/* 標題與按鈕 */}
+            <div className="relative z-10 flex flex-col items-center gap-6 p-6 animate-slide-up w-full max-w-sm mt-auto mb-10">
+                <div className="text-center space-y-2">
+                    <span className="text-yellow-400 text-xs font-['Press_Start_2P'] tracking-widest animate-pulse shadow-black drop-shadow-md">OSAKA RPG</span>
+                    <h1 className="text-5xl md:text-6xl font-bold text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] font-['DotGothic16'] leading-tight">
+                        大阪<br/>大冒險
+                    </h1>
+                </div>
+
+                <div className="bg-black/70 p-5 rounded-xl border border-white/30 backdrop-blur-md w-full text-center shadow-2xl">
+                    <p className="text-gray-200 text-xs font-['DotGothic16'] leading-5 mb-5 font-bold tracking-wide">
+                        探索道頓堀、攻略黑門市場！<br/>
+                        收集所有金幣，吃遍大阪美食吧！
+                    </p>
+                    <button 
+                        onClick={onStart}
+                        className="group w-full relative px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-['Press_Start_2P'] text-sm transition-all shadow-[0_4px_0_#1e3a8a] active:translate-y-1 active:shadow-none flex items-center justify-center gap-3 rounded-lg border-t border-white/20"
+                    >
+                        <Play size={18} className="fill-current animate-bounce" />
+                        START GAME
+                    </button>
+                </div>
+            </div>
+
+            {/* 底部版權 */}
+            <div className="absolute bottom-4 text-[10px] text-gray-500 font-['Press_Start_2P'] z-10">
+                © 2024 OSAKA TRIP
+            </div>
+        </div>
+    );
+};
+
+// --- 主程式組件 ---
 const App = () => {
+  const [gameStarted, setGameStarted] = useState(false); // 控制是否顯示封面
   const [playerPos, setPlayerPos] = useState({ x: 50, y: 90 });
   const [targetPos, setTargetPos] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -77,52 +143,52 @@ const App = () => {
     return initialCoins;
   });
 
-  // 資料列表
+  // 資料列表 - 座標已針對手機優化
   const places = [
     // --- 梅田區 (Umeda) ---
-    { id: 28, name: "神座拉麵", label: "拉麵", x: 20, y: 15, region: "umeda", img: "ramen", query: "神座拉麵 梅田", driveId: "https://drive.google.com/file/d/1lzATitRHI-zSyQ6baKzvm7-ChBkduar6/view?usp=drivesdk" }, 
+    { id: 28, name: "神座拉麵", label: "拉麵", x: 18, y: 15, region: "umeda", img: "ramen", query: "神座拉麵 梅田", driveId: "https://drive.google.com/file/d/1lzATitRHI-zSyQ6baKzvm7-ChBkduar6/view?usp=drivesdk" }, 
     { id: 29, name: "木地大阪燒", label: "大阪燒", x: 35, y: 12, region: "umeda", img: "okonomiyaki", query: "きじ木地大阪燒 梅田", driveId: "https://drive.google.com/file/d/155beOGh0yyiZvB4ID6JtQHW_zjGx3g6b/view?usp=drivesdk" },
-    { id: 30, name: "551蓬萊", label: "肉包", x: 25, y: 22, region: "umeda", img: "porkbun", query: "551蓬萊 梅田", driveId: "https://drive.google.com/file/d/12oPN9BTdxjeVRYYuT0BRw7PJ2eFI0ARi/view?usp=drivesdk" },
-    { id: 31, name: "堂島蛋糕卷", label: "蛋糕卷", x: 40, y: 20, region: "umeda", img: "cake", query: "堂島蛋糕卷 梅田", driveId: "https://drive.google.com/file/d/1Ws7_njtCmeIOB1e-juvXt23i8SwC4eMg/view?usp=drivesdk" },
+    { id: 30, name: "551蓬萊", label: "肉包", x: 26, y: 24, region: "umeda", img: "porkbun", query: "551蓬萊 梅田", driveId: "https://drive.google.com/file/d/12oPN9BTdxjeVRYYuT0BRw7PJ2eFI0ARi/view?usp=drivesdk" },
+    { id: 31, name: "堂島蛋糕卷", label: "蛋糕卷", x: 42, y: 18, region: "umeda", img: "cake", query: "堂島蛋糕卷 梅田", driveId: "https://drive.google.com/file/d/1Ws7_njtCmeIOB1e-juvXt23i8SwC4eMg/view?usp=drivesdk" },
 
     // --- 心齋橋 / 美國村 (Shinsaibashi) ---
-    { id: 13, name: "北極星", label: "蛋包飯", x: 15, y: 32, region: "shinsai", img: "omurice", query: "北極星蛋包飯 心齋橋", driveId: "https://drive.google.com/file/d/1ytbMEx9WYLV73qlJLv3D0_3ya-diH3s2/view?usp=drivesdk" },
-    { id: 14, name: "一蘭", label: "拉麵", x: 25, y: 35, region: "shinsai", img: "ramen", query: "一蘭拉麵 心齋橋", driveId: "https://drive.google.com/file/d/14-1dSy18dinF_OfJiYtKVJtZh6xvYZi8/view?usp=drivesdk" },
-    { id: 15, name: "HARBS", label: "蛋糕", x: 32, y: 30, region: "shinsai", img: "crepe cake", query: "HARBS 心齋橋", driveId: "https://drive.google.com/file/d/1ESEAXx8FibDs9xb_LpW4_xQ6L_DaGL3M/view?usp=drivesdk" },
-    { id: 16, name: "PABLO", label: "起司塔", x: 20, y: 38, region: "shinsai", img: "cheese tart", query: "PABLO 心齋橋", driveId: "https://drive.google.com/file/d/1MOuwqZ9A2e6dVPWhK5iUiL2keJt0P7dH/view?usp=drivesdk" },
-    { id: 17, name: "宇治園", label: "抹茶", x: 28, y: 33, region: "shinsai", img: "matcha dessert", query: "宇治園本店 心齋橋", driveId: "https://drive.google.com/file/d/1GyDvo1XL63JqdzbezsW7PwBNmIBXJRv2/view?usp=drivesdk" },
-    { id: 18, name: "甲賀流", label: "章魚燒", x: 10, y: 38, region: "shinsai", img: "takoyaki", query: "甲賀流章魚燒 美國村", driveId: "https://drive.google.com/file/d/1SLbFIYcr1o1GMlywW3L-BosaCDn691Ma/view?usp=drivesdk" },
-    { id: 19, name: "Ice Dog", label: "甜點", x: 8, y: 42, region: "shinsai", img: "ice cream bun", query: "元祖Ice Dog 美國村", driveId: "https://drive.google.com/file/d/16-CVZsJxlD94KfBOtdu9yQ9e93kLcFEQ/view?usp=drivesdk" },
+    { id: 13, name: "北極星", label: "蛋包飯", x: 15, y: 30, region: "shinsai", img: "omurice", query: "北極星蛋包飯 心齋橋", driveId: "https://drive.google.com/file/d/1ytbMEx9WYLV73qlJLv3D0_3ya-diH3s2/view?usp=drivesdk" },
+    { id: 14, name: "一蘭", label: "拉麵", x: 25, y: 38, region: "shinsai", img: "ramen", query: "一蘭拉麵 心齋橋", driveId: "https://drive.google.com/file/d/14-1dSy18dinF_OfJiYtKVJtZh6xvYZi8/view?usp=drivesdk" },
+    { id: 15, name: "HARBS", label: "蛋糕", x: 34, y: 28, region: "shinsai", img: "crepe cake", query: "HARBS 心齋橋", driveId: "https://drive.google.com/file/d/1ESEAXx8FibDs9xb_LpW4_xQ6L_DaGL3M/view?usp=drivesdk" },
+    { id: 16, name: "PABLO", label: "起司塔", x: 18, y: 44, region: "shinsai", img: "cheese tart", query: "PABLO 心齋橋", driveId: "https://drive.google.com/file/d/1MOuwqZ9A2e6dVPWhK5iUiL2keJt0P7dH/view?usp=drivesdk" },
+    { id: 17, name: "宇治園", label: "抹茶", x: 28, y: 32, region: "shinsai", img: "matcha dessert", query: "宇治園本店 心齋橋", driveId: "https://drive.google.com/file/d/1GyDvo1XL63JqdzbezsW7PwBNmIBXJRv2/view?usp=drivesdk" },
+    { id: 18, name: "甲賀流", label: "章魚燒", x: 8, y: 36, region: "shinsai", img: "takoyaki", query: "甲賀流章魚燒 美國村", driveId: "https://drive.google.com/file/d/1SLbFIYcr1o1GMlywW3L-BosaCDn691Ma/view?usp=drivesdk" },
+    { id: 19, name: "Ice Dog", label: "甜點", x: 10, y: 46, region: "shinsai", img: "ice cream bun", query: "元祖Ice Dog 美國村", driveId: "https://drive.google.com/file/d/16-CVZsJxlD94KfBOtdu9yQ9e93kLcFEQ/view?usp=drivesdk" },
 
     // --- 道頓堀區 (Dotonbori) ---
-    { id: 1, name: "達摩串炸", label: "串炸", x: 45, y: 46, region: "doton", img: "kushikatsu", query: "達摩串炸 道頓堀", driveId: "https://drive.google.com/file/d/1NukTzwA9XCcxMK3EgUCIcdmFE55wCJay/view?usp=drivesdk" },
-    { id: 2, name: "元祖章魚燒", label: "章魚燒", x: 55, y: 48, region: "doton", img: "takoyaki", query: "元祖章魚燒 道頓堀", driveId: "https://drive.google.com/file/d/1EuKLaY3rvwfVD2wH9x0JY7rIECxJIvfE/view?usp=drivesdk" },
-    { id: 3, name: "金龍拉麵", label: "拉麵", x: 50, y: 52, region: "doton", img: "ramen", query: "金龍拉麵 道頓堀", driveId: "https://drive.google.com/file/d/1S9bsn-GGkFvH1lTEZYz3dggeRHLeDJA0/view?usp=drivesdk" },
-    { id: 4, name: "四天王", label: "拉麵", x: 48, y: 54, region: "doton", img: "ramen", query: "四天王拉麵 道頓堀", driveId: "https://drive.google.com/file/d/1KF09NTbKqGZxVGQA2i3RJTwtp3QqXWA1/view?usp=drivesdk" },
-    { id: 5, name: "金久右衛門", label: "拉麵", x: 52, y: 56, region: "doton", img: "soy sauce ramen", query: "金久右衛門拉麵 道頓堀", driveId: "https://drive.google.com/file/d/1bq9xVP4LOjPLGDF6cdVODsJfbc03U8wp/view?usp=drivesdk" },
-    { id: 6, name: "肉劇場", label: "肉丼", x: 42, y: 50, region: "doton", img: "roast beef bowl", query: "道頓堀肉劇場", driveId: "https://drive.google.com/file/d/1rjm5QPGvyFqMVCFnQpaz6U4uIAWwejVm/view?usp=drivesdk" },
-    { id: 7, name: "今井烏龍", label: "烏龍麵", x: 58, y: 46, region: "doton", img: "udon noodle", query: "今井烏龍麵 道頓堀", driveId: "https://drive.google.com/file/d/1a92NJh67iSvfdfAlZ9VasTEcI7Kihkmy/view?usp=drivesdk" },
-    { id: 8, name: "千房", label: "大阪燒", x: 62, y: 48, region: "doton", img: "okonomiyaki", query: "千房大阪燒 道頓堀", driveId: "https://drive.google.com/file/d/1_jX5qykCsJntOIXO-Af6Bl9FpQcDxf5l/view?usp=drivesdk" },
-    { id: 9, name: "美津濃", label: "大阪燒", x: 60, y: 52, region: "doton", img: "okonomiyaki", query: "美津濃大阪燒", driveId: "https://drive.google.com/file/d/1ggmk2CRe-Z0hVHIWlzNDHlFn4IDxmXDk/view?usp=drivesdk" },
-    { id: 10, name: "蟹道樂", label: "螃蟹", x: 65, y: 50, region: "doton", img: "crab", query: "蟹道樂 道頓堀", driveId: "https://drive.google.com/file/d/1hXL7wayAIbhvLO_sxSG8dDIWy0rqodM5/view?usp=drivesdk" },
-    { id: 11, name: "大阪王將", label: "餃子", x: 46, y: 42, region: "doton", img: "gyoza", query: "大阪王將 道頓堀", driveId: "https://drive.google.com/file/d/1-oAqMyF5EvjMj7YrnIFWqdlNDYeii2ue/view?usp=drivesdk" },
-    { id: 12, name: "大起水產", label: "壽司", x: 68, y: 54, region: "doton", img: "sushi", query: "大起水產迴轉壽司 道頓堀", driveId: "https://drive.google.com/file/d/1IWu2pirL6ULqPt3ZJ9qYlA8Z48HT0bQ4/view?usp=drivesdk" },
+    { id: 11, name: "大阪王將", label: "餃子", x: 42, y: 42, region: "doton", img: "gyoza", query: "大阪王將 道頓堀", driveId: "https://drive.google.com/file/d/1-oAqMyF5EvjMj7YrnIFWqdlNDYeii2ue/view?usp=drivesdk" },
+    { id: 1, name: "達摩串炸", label: "串炸", x: 50, y: 42, region: "doton", img: "kushikatsu", query: "達摩串炸 道頓堀", driveId: "https://drive.google.com/file/d/1NukTzwA9XCcxMK3EgUCIcdmFE55wCJay/view?usp=drivesdk" },
+    { id: 7, name: "今井烏龍", label: "烏龍麵", x: 58, y: 43, region: "doton", img: "udon noodle", query: "今井烏龍麵 道頓堀", driveId: "https://drive.google.com/file/d/1a92NJh67iSvfdfAlZ9VasTEcI7Kihkmy/view?usp=drivesdk" },
+    { id: 10, name: "蟹道樂", label: "螃蟹", x: 66, y: 44, region: "doton", img: "crab", query: "蟹道樂 道頓堀", driveId: "https://drive.google.com/file/d/1hXL7wayAIbhvLO_sxSG8dDIWy0rqodM5/view?usp=drivesdk" },
+    { id: 6, name: "肉劇場", label: "肉丼", x: 40, y: 50, region: "doton", img: "roast beef bowl", query: "道頓堀肉劇場", driveId: "https://drive.google.com/file/d/1rjm5QPGvyFqMVCFnQpaz6U4uIAWwejVm/view?usp=drivesdk" },
+    { id: 2, name: "元祖章魚燒", label: "章魚燒", x: 48, y: 50, region: "doton", img: "takoyaki", query: "元祖章魚燒 道頓堀", driveId: "https://drive.google.com/file/d/1EuKLaY3rvwfVD2wH9x0JY7rIECxJIvfE/view?usp=drivesdk" },
+    { id: 3, name: "金龍拉麵", label: "拉麵", x: 56, y: 50, region: "doton", img: "ramen", query: "金龍拉麵 道頓堀", driveId: "https://drive.google.com/file/d/1S9bsn-GGkFvH1lTEZYz3dggeRHLeDJA0/view?usp=drivesdk" },
+    { id: 8, name: "千房", label: "大阪燒", x: 64, y: 50, region: "doton", img: "okonomiyaki", query: "千房大阪燒 道頓堀", driveId: "https://drive.google.com/file/d/1_jX5qykCsJntOIXO-Af6Bl9FpQcDxf5l/view?usp=drivesdk" },
+    { id: 4, name: "四天王", label: "拉麵", x: 44, y: 57, region: "doton", img: "ramen", query: "四天王拉麵 道頓堀", driveId: "https://drive.google.com/file/d/1KF09NTbKqGZxVGQA2i3RJTwtp3QqXWA1/view?usp=drivesdk" },
+    { id: 5, name: "金久右衛門", label: "拉麵", x: 52, y: 58, region: "doton", img: "soy sauce ramen", query: "金久右衛門拉麵 道頓堀", driveId: "https://drive.google.com/file/d/1bq9xVP4LOjPLGDF6cdVODsJfbc03U8wp/view?usp=drivesdk" },
+    { id: 9, name: "美津濃", label: "大阪燒", x: 60, y: 57, region: "doton", img: "okonomiyaki", query: "美津濃大阪燒", driveId: "https://drive.google.com/file/d/1ggmk2CRe-Z0hVHIWlzNDHlFn4IDxmXDk/view?usp=drivesdk" },
+    { id: 12, name: "大起水產", label: "壽司", x: 68, y: 59, region: "doton", img: "sushi", query: "大起水產迴轉壽司 道頓堀", driveId: "https://drive.google.com/file/d/1IWu2pirL6ULqPt3ZJ9qYlA8Z48HT0bQ4/view?usp=drivesdk" },
 
     // --- 黑門市場 (Kuromon) ---
-    { id: 24, name: "黑門三平", label: "生魚片", x: 80, y: 58, region: "kuromon", img: "sashimi", query: "黑門三平", driveId: "https://drive.google.com/file/d/1aKPChHILwJs0yRsnJlzhztPol1hJFPSf/view?usp=drivesdk" },
-    { id: 25, name: "黑銀鮪魚", label: "鮪魚", x: 85, y: 62, region: "kuromon", img: "tuna sushi", query: "黑銀鮪魚屋", driveId: "https://drive.google.com/file/d/1VmGyXkm_tOjMBfWpYoMnmC9AQyjn6mIY/view?usp=drivesdk" },
-    { id: 26, name: "石橋關東煮", label: "關東煮", x: 82, y: 66, region: "kuromon", img: "oden", query: "石橋關東煮 黑門市場", driveId: "https://drive.google.com/file/d/1zINTVqVUBhn4dIOb24V_HQoPokDJ6P2Z/view?usp=drivesdk" },
-    { id: 27, name: "高橋豆漿", label: "豆漿", x: 78, y: 64, region: "kuromon", img: "soy milk", query: "高橋豆漿 黑門市場", driveId: "https://drive.google.com/file/d/1XZMJXNlIS7w0w0Gva-zHNTDa95gdzycy/view?usp=drivesdk" },
+    { id: 24, name: "黑門三平", label: "生魚片", x: 78, y: 60, region: "kuromon", img: "sashimi", query: "黑門三平", driveId: "https://drive.google.com/file/d/1aKPChHILwJs0yRsnJlzhztPol1hJFPSf/view?usp=drivesdk" },
+    { id: 25, name: "黑銀鮪魚", label: "鮪魚", x: 86, y: 60, region: "kuromon", img: "tuna sushi", query: "黑銀鮪魚屋", driveId: "https://drive.google.com/file/d/1VmGyXkm_tOjMBfWpYoMnmC9AQyjn6mIY/view?usp=drivesdk" },
+    { id: 26, name: "石橋關東煮", label: "關東煮", x: 82, y: 68, region: "kuromon", img: "oden", query: "石橋關東煮 黑門市場", driveId: "https://drive.google.com/file/d/1zINTVqVUBhn4dIOb24V_HQoPokDJ6P2Z/view?usp=drivesdk" },
+    { id: 27, name: "高橋豆漿", label: "豆漿", x: 74, y: 66, region: "kuromon", img: "soy milk", query: "高橋豆漿 黑門市場", driveId: "https://drive.google.com/file/d/1XZMJXNlIS7w0w0Gva-zHNTDa95gdzycy/view?usp=drivesdk" },
 
     // --- 難波區 (Namba) ---
-    { id: 20, name: "國產牛", label: "燒肉", x: 40, y: 68, region: "namba", img: "yakiniku", query: "國產牛燒肉 難波", driveId: "https://drive.google.com/file/d/1hfIXBxGMAAg9Ldwg6F_ubDl0kkR3VZhs/view?usp=drivesdk" },
-    { id: 21, name: "自由軒", label: "咖哩", x: 50, y: 70, region: "namba", img: "curry rice", query: "自由軒 難波", driveId: "https://drive.google.com/file/d/1o6K3rvwWSeeLvRdV5YjPLe8JlnTgbPZZ/view?usp=drivesdk" },
-    { id: 22, name: "老爺爺", label: "起司蛋糕", x: 45, y: 74, region: "namba", img: "cheesecake", query: "老爺爺起司蛋糕 難波", driveId: "https://drive.google.com/file/d/1Y14EOtbrnjUZaXwOiLpbdpoHD0HMs1gi/view?usp=drivesdk" },
-    { id: 23, name: "會津屋", label: "章魚燒", x: 35, y: 72, region: "namba", img: "takoyaki", query: "會津屋章魚燒 難波", driveId: "https://drive.google.com/file/d/1wf0j9XFVgY-aibn_KKMEYXeKS7sWBvg1/view?usp=drivesdk" },
+    { id: 20, name: "國產牛", label: "燒肉", x: 38, y: 68, region: "namba", img: "yakiniku", query: "國產牛燒肉 難波", driveId: "https://drive.google.com/file/d/1hfIXBxGMAAg9Ldwg6F_ubDl0kkR3VZhs/view?usp=drivesdk" },
+    { id: 21, name: "自由軒", label: "咖哩", x: 50, y: 72, region: "namba", img: "curry rice", query: "自由軒 難波", driveId: "https://drive.google.com/file/d/1o6K3rvwWSeeLvRdV5YjPLe8JlnTgbPZZ/view?usp=drivesdk" },
+    { id: 22, name: "老爺爺", label: "起司蛋糕", x: 45, y: 78, region: "namba", img: "cheesecake", query: "老爺爺起司蛋糕 難波", driveId: "https://drive.google.com/file/d/1Y14EOtbrnjUZaXwOiLpbdpoHD0HMs1gi/view?usp=drivesdk" },
+    { id: 23, name: "會津屋", label: "章魚燒", x: 30, y: 72, region: "namba", img: "takoyaki", query: "會津屋章魚燒 難波", driveId: "https://drive.google.com/file/d/1wf0j9XFVgY-aibn_KKMEYXeKS7sWBvg1/view?usp=drivesdk" },
 
     // --- 新世界 / 木津市場 (Shinsekai) ---
-    { id: 32, name: "八重勝", label: "串炸", x: 55, y: 88, region: "shinsekai", img: "fried skewers", query: "八重勝 串炸", driveId: "https://drive.google.com/file/d/1HWABjzmg9KUMUv7B24VSx84JU1AEkPcQ/view?usp=drivesdk" },
-    { id: 33, name: "木津魚市", label: "海鮮丼", x: 35, y: 85, region: "shinsekai", img: "seafood bowl", query: "木津魚市食堂", driveId: "https://drive.google.com/file/d/1lqjIP5jFkH5qseryfWLOnnd6hm_3cAj-/view?usp=drivesdk" },
+    { id: 32, name: "八重勝", label: "串炸", x: 58, y: 88, region: "shinsekai", img: "fried skewers", query: "八重勝 串炸", driveId: "https://drive.google.com/file/d/1HWABjzmg9KUMUv7B24VSx84JU1AEkPcQ/view?usp=drivesdk" },
+    { id: 33, name: "木津魚市", label: "海鮮丼", x: 32, y: 85, region: "shinsekai", img: "seafood bowl", query: "木津魚市食堂", driveId: "https://drive.google.com/file/d/1lqjIP5jFkH5qseryfWLOnnd6hm_3cAj-/view?usp=drivesdk" },
   ];
 
   // 遊戲循環
@@ -205,10 +271,15 @@ const App = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#111] p-2 font-['DotGothic16'] text-white select-none">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#111] p-2 font-['DotGothic16'] text-white select-none relative overflow-hidden">
       
+      {/* 🌟 封面判斷：如果還沒開始遊戲，就顯示 StartScreen */}
+      {!gameStarted && (
+         <StartScreen onStart={() => setGameStarted(true)} />
+      )}
+
       {/* 頂部 HUD */}
-      <div className="w-full max-w-lg mb-3 flex justify-between items-center bg-[#2d2d2d] px-4 py-2 rounded-lg border-b-4 border-gray-600 shadow-lg">
+      <div className="w-full max-w-lg mb-3 flex justify-between items-center bg-[#2d2d2d] px-4 py-2 rounded-lg border-b-4 border-gray-600 shadow-lg z-10">
         <div className="flex items-center gap-2">
             <div className="text-2xl animate-pulse">🐙</div>
             <div>
@@ -229,7 +300,7 @@ const App = () => {
       </div>
 
       {/* 遊戲畫面框 */}
-      <div className="relative w-full max-w-lg aspect-[3/4] bg-[#222] rounded-xl border-4 border-[#444] shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-lg aspect-[3/4] bg-[#222] rounded-xl border-4 border-[#444] shadow-2xl overflow-hidden z-0">
           
           {/* === 遊戲地圖 === */}
           <div className="relative w-full h-full bg-[#5c94fc] overflow-hidden">
